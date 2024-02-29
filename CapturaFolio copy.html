@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap" rel="stylesheet">  
+	<link rel="stylesheet" href="css/style.css">
+	<link rel="icon" href="img/ico/UCS.png">
+	<title>Registro Canalizaciones</title>
+</head>
+
+<body>
+	
+    <div class="contenedor">
+
+        <form class="formulario" id="formulario">
+
+            <i Style="color: white;-webkit-user-select: none; -ms-user-select: none; user-select: none; /* Standard syntax */">
+                <script id="Fecha" name="Fecha">
+                    function makeArray() {
+                    for (i = 0; i < makeArray.arguments.length; i++) this[i + 1] = makeArray.arguments[i]
+                    }
+                    var months = new makeArray('Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre');
+                    var date = new Date();
+                    var day = date.getDate();
+                    var month = date.getMonth() + 1;
+                    var yy = date.getYear();
+                    var year = (yy < 1000) ? yy + 1900 : yy;
+                    var hours = date.getHours();
+                    var minutes = date.getMinutes();
+
+                    document.write( day + "/" + months[month] + "/" + year + "  " + hours + ":" + minutes);
+                </script>
+            </i>
+
+            <!-- Inicia Formulario -->
+
+                <!-- Registro Formulario -->
+
+                <div class="title">Canalizaciones Operadores UCS</div>
+                <br>
+
+					<div class="contenedor-formulario" >
+						<label for="Folio">Folio:</label>
+						<div class="contenedor-input-fecha">
+							<input  type="text" id="Folio" name="Folio" placeholder="UCS-T-BIS-******">
+						</div>
+					</div>
+
+                    <div class="contenedor-formulario">
+						<label for="Tipo">Tipo de Solicitud:</label>
+	                    <select id="Tipo" name="Tipo">
+                            <option style="color: #bdb9b9;"value="false">-Elige una opción-</option>
+                            <option value="Envío Patrulla">Envío Patrulla</option>
+                            <option value="Entrevista Ciudadana">Entrevista Ciudadana</option>
+                            <option value="Vialidad y Tránsito">Vialidad y Tránsito</option>
+                        </select>
+					</div>
+
+
+                <!-- Captura Base -->
+
+                    <div class="contenedor-formulario" >
+						<label for="Accion">Acciones:</label>
+						<div class="contenedor-input-fecha2">
+							<input  type="text" id="Accion" name="Accion" placeholder="">
+						</div>
+					</div>
+
+                    <div class="contenedor-formulario">
+						<label for="StatusB">Status:</label>
+                        <select id="StatusB" name="StatusB">
+                            <option style="color: #bdb9b9;"value="false">-Elige una opción-</option>
+                            <option value="Pendiente">Pendiente</option>
+                            <option value="Concluido">Concluido</option>
+                        </select>
+					</div>
+
+
+				<!-- Captura Operador -->
+
+
+                    <div class="contenedor-formulario">
+						<label for="StatusO">Status:</label>
+                        <select id="StatusO" name="StatusO">
+                            <option style="color: #bdb9b9;"value="false">-Elige una opción-</option>
+                            <option value="Pendiente">Pendiente</option>
+                            <option value="Concluido">Concluido</option>
+                        </select>
+					</div>
+					
+
+			<!-- Termina Formulario -->
+
+            <br>
+            <div class="contenedor-boton">
+                <button type="submit">
+                    Registrar
+                </button>
+            </div>
+
+
+
+		</form>
+
+	</div>
+
+	<script src="js/app.js"></script>
+	
+</body>
+</html>

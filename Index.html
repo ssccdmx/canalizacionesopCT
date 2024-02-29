@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0">
+	<meta http-equiv="Page-Enter" content="blendTrans(duration=1)">
+	<meta http-equiv="Page-Exit" content="revealTrans(duration=0.5, transition=5)">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/directorio.css">
+	<script src="https://kit.fontawesome.com/4a84d99523.js" crossorigin="anonymous"></script>
+	<link rel="icon" href="img/ico/UCS.png">
+	<script src="https://unpkg.com/vue@2.1.10/dist/vue.js"></script>
+	<script src="JS/table.js"></script>	
+	<script src="JS/datatable.js"></script>
+
+    <title>Bitácora Canalizaciones</title>
+    <style>
+        table {
+            width: 90%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+
+
+<body>
+
+    <p>Sheets API Quickstart</p>
+
+        <!--Add buttons to initiate auth sequence and sign out-->
+        <button id="authorize_button" onclick="handleAuthClick()">Authorize</button>
+        <button id="signout_button" onclick="handleSignoutClick()">Sign Out</button>
+
+        <pre id="content" style="white-space: pre-wrap;"></pre>
+
+        <script type="text/javascript">
+        /* exported gapiLoaded */
+        /* exported gisLoaded */
+        /* exported handleAuthClick */
+        /* exported handleSignoutClick */
+
+        // TODO(developer): Set to client ID and API key from the Developer Console
+        const CLIENT_ID = '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';
+        const API_KEY = 'AIzaSyAIDJkd7iKaJkfvGK3uNhrwonQxmnm_EQU';
+
+        // Discovery doc URL for APIs used by the quickstart
+        const DISCOVERY_DOC = 'https://sheets.googleapis.com/$discovery/rest?version=v4';
+
+        // Authorization scopes required by the API; multiple scopes can be
+        // included, separated by spaces.
+        const SCOPES = 'https://www.googleapis.com/auth/spreadsheets.readonly';
+
+        let tokenClient;
+        let gapiInited = false;
+        let gisInited = false;
+
+        document.getElementById('authorize_button').style.visibility = 'hidden';
+        document.getElementById('signout_button').style.visibility = 'hidden';
+
+        /**
+         * Callback after api.js is loaded.
+         */
+        function gapiLoaded() {
+            gapi.load('client', initializeGapiClient);
+        }
+
+        /**
+         * Callback after the API client is loaded. Loads the
+         * discovery doc to initialize the API.
+         */
+        async function initializeGapiClient() {
+            await gapi.client.init({
+            apiKey: API_KEY,
+            discoveryDocs: [DISCOVERY_DOC],
+            });
+            gapiInited = true;
+            maybeEnableButtons();
+        }
+
+        /**
+         * Callback after Google Identity Services are loaded.
+         */
+        function gisLoaded() {
+            tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: CLIENT_ID,
+            scope: SCOPES,
+            callback: '', // defined later
+            });
+            gisInited = true;
+            maybeEnableButtons();
+        }
+
+        /**
+         * Enables user interaction after all libraries are loaded.
+         */
+        function maybeEnableButtons() {
+            if (gapiInited && gisInited) {
+            document.getElementById('authorize_button').style.visibility = 'visible';
+            }
+        }
+
+        /**
+         *  Sign in the user upon button click.
+         */
+        function handleAuthClick() {
+            tokenClient.callback = async (resp) => {
+            if (resp.error !== undefined) {
+                throw (resp);
+            }
+            document.getElementById('signout_button').style.visibility = 'visible';
+            document.getElementById('authorize_button').innerText = 'Refresh';
+            await listMajors();
+            };
+
+            if (gapi.client.getToken() === null) {
+            // Prompt the user to select a Google Account and ask for consent to share their data
+            // when establishing a new session.
+            tokenClient.requestAccessToken({prompt: 'consent'});
+            } else {
+            // Skip display of account chooser and consent dialog for an existing session.
+            tokenClient.requestAccessToken({prompt: ''});
+            }
+        }
+
+        /**
+         *  Sign out the user upon button click.
+         */
+        function handleSignoutClick() {
+            const token = gapi.client.getToken();
+            if (token !== null) {
+            google.accounts.oauth2.revoke(token.access_token);
+            gapi.client.setToken('');
+            document.getElementById('content').innerText = '';
+            document.getElementById('authorize_button').innerText = 'Authorize';
+            document.getElementById('signout_button').style.visibility = 'hidden';
+            }
+        }
+
+        /**
+         * Print the names and majors of students in a sample spreadsheet:
+         * https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
+         */
+        async function listMajors() {
+            let response;
+            try {
+            // Fetch first 10 files
+            response = await gapi.client.sheets.spreadsheets.values.get({
+                spreadsheetId: '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms',
+                range: 'Class Data!A2:E',
+            });
+            } catch (err) {
+            document.getElementById('content').innerText = err.message;
+            return;
+            }
+            const range = response.result;
+            if (!range || !range.values || range.values.length == 0) {
+            document.getElementById('content').innerText = 'No values found.';
+            return;
+            }
+            // Flatten to string to display
+            const output = range.values.reduce(
+                (str, row) => `${str}${row[0]}, ${row[4]}\n`,
+                'Name, Major:\n');
+            document.getElementById('content').innerText = output;
+        }
+        </script>
+        <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
+        <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
+
+        
+        <div class="contenedor-title">
+            <div class="title">
+                <div class="col-md-12">
+                    <h1>Bitácora Canalizaciones Contacto Telefónico</h1>
+                </div>
+		</div>
+
+			<!--Contenedor Botones-->
+			<div class="contenedor-buton">
+
+                <script>
+                    function toggleEmergente() {
+                        var contenedorEmergente = document.querySelector('.contenedor-emergente');
+                        var botonToggle = document.getElementById('botonToggle');
+                        var iconoBoton = document.getElementById('iconoBoton');
+                
+                        if (contenedorEmergente.classList.contains('mostrar-emergente')) {
+                            contenedorEmergente.classList.remove('mostrar-emergente'); // Oculta el contenedor emergente
+                            iconoBoton.classList.remove('fa-close'); // Restaura el ícono original
+                            iconoBoton.classList.add('fa-add');
+                        } else {
+                            contenedorEmergente.classList.add('mostrar-emergente'); // Muestra el contenedor emergente
+                            iconoBoton.classList.remove('fa-add'); // Cambia el ícono a "X"
+                            iconoBoton.classList.add('fa-close');
+                        }
+                        // Llama a la función para borrar los datos del formulario al abrir el contenedor emergente
+                        limpiarFormulario();
+                    }
+                
+                    function validarFormulario() {
+                        var folio = document.getElementById('Folio').value;
+                        var tipo = document.getElementById('Tipo').value;
+                        var buttonForm = document.getElementById('buttonForm');
+
+                        if (folio === '' || tipo === '') {
+                            buttonForm.disabled = true;
+                        } else {
+                            // Si el campo Folio no está vacío, el formulario es válido, por lo que podemos enviarlo
+                            // Cierra el contenedor emergente
+                            var contenedorEmergente = document.querySelector('.contenedor-emergente');
+                            contenedorEmergente.classList.remove('mostrar-emergente');
+
+                            // Cambia el icono del botón a su estado original
+                            var botonToggle = document.getElementById('botonToggle');
+                            var iconoBoton = document.getElementById('iconoBoton');
+                            iconoBoton.classList.remove('fa-close'); // Restaura el ícono original
+                            iconoBoton.classList.add('fa-add');
+
+
+                            // Muestra el mensaje de envío exitoso dentro del contenedor emergente
+                            var mensajeExito = document.getElementById('mensajeExito');
+                            mensajeExito.style.display = 'block';
+
+                            // Oculta el mensaje de envío exitoso después de 6 segundos
+                            setTimeout(function() {
+                                mensajeExito.style.display = 'none';
+                            }, 6000);
+
+
+                            // Habilita el botón de enviar
+                            buttonForm.disabled = false;
+                        }
+                    }
+
+                    function limpiarFormulario() {
+                        // Borra los datos del formulario
+                        document.getElementById('Folio').value = ''; // Coloca el valor del campo "Folio" en vacío
+                        document.getElementById('Tipo').value = ''; // Coloca el valor del campo "Tipo" en vacío
+                        // Añade aquí más líneas si necesitas limpiar otros campos del formulario
+                    }
+
+                    function exito() {
+                        var contenedorExito = document.querySelector('.exito');
+                
+                        if (contenedorEmergente.classList.contains('mostrar-emergente')) {
+                            contenedorEmergente.classList.remove('mostrar-emergente'); // Oculta el contenedor emergente
+                            iconoBoton.classList.remove('fa-close'); // Restaura el ícono original
+                            iconoBoton.classList.add('fa-add');
+                        } else {
+                            contenedorEmergente.classList.add('mostrar-emergente'); // Muestra el contenedor emergente
+                            iconoBoton.classList.remove('fa-add'); // Cambia el ícono a "X"
+                            iconoBoton.classList.add('fa-close');
+                        }
+                        // Llama a la función para borrar los datos del formulario al abrir el contenedor emergente
+                        limpiarFormulario();
+                    }
+
+                </script>
+                
+
+				<button id="botonToggle" style="border-color: #fff; border-radius: 10px; font-size: medium; padding:5px; margin-bottom:5px; background-color: transparent; color: #fff;" type="submit" onclick="javascript:toggleEmergente()">
+						<i id="iconoBoton" class="fa-solid fa-add"></i>
+				</button>
+			</div>
+		<!--End Contenedor Botones-->
+	</div>
+
+
+    <div class="contenedor-emergente">
+
+        
+        <form class="formulario" id="formulario" onsubmit="return validarFormulario()">
+
+
+            <i Style="color: white;-webkit-user-select: none; -ms-user-select: none; user-select: none; /* Standard syntax */">
+                <script id="Fecha" name="Fecha">
+                    function makeArray() {
+                    for (i = 0; i < makeArray.arguments.length; i++) this[i + 1] = makeArray.arguments[i]
+                    }
+                    var months = new makeArray('Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre');
+                    var date = new Date();
+                    var day = date.getDate();
+                    var month = date.getMonth() + 1;
+                    var yy = date.getYear();
+                    var year = (yy < 1000) ? yy + 1900 : yy;
+                    var hours = date.getHours();
+                    var minutes = date.getMinutes();
+
+                    document.write( day + "/" + months[month] + "/" + year + "  " + hours + ":" + minutes);
+                </script>
+            </i>
+
+            <!-- Inicia Formulario -->
+
+                <!-- Registro Folio -->
+
+                    <div class="title-form">Captura de folio UCS</div>
+                    <br>
+					<div class="contenedor-formulario" >
+						<label class="label-form" for="Folio">Folio:</label>
+						<div class="contenedor-input-fecha">
+							<input  type="text" id="Folio" name="Folio" placeholder="UCS-T-BIS-******">
+						</div>
+					</div><br>
+
+                    <div class="contenedor-formulario">
+						<label for="Tipo">Tipo de Solicitud:</label>
+	                    <select id="Tipo" name="Tipo" aria-placeholder="-Elige una opción-">
+                            <option value="Envío de Patrulla">Envío de Patrulla</option>
+                            <option value="Entrevista Ciudadana">Entrevista Ciudadana</option>
+                            <option value="Vialidad y Tránsito">Vialidad y Tránsito</option>
+                        </select>
+					</div>
+
+
+                <!-- Captura Base -->
+                    <div hidden class="contenedor-formulario" >
+						<div hidden class="contenedor-input-fecha2">
+							<input  type="text" id="Accion" name="Accion" placeholder="">
+						</div>
+					</div>
+
+                    <div class="contenedor-formulario">
+                        <input hidden id="StatusB" name="StatusB">
+					</div>
+
+
+				<!-- Captura Operador -->
+                    <div class="contenedor-formulario">
+                        <input hidden id="StatusO" name="StatusO">
+					</div>
+					
+
+			<!-- Termina Formulario -->
+
+            <br>
+            <div class="contenedor-boton">
+                <button class="buttonForm" onclick="javascript:validarFormulario()">
+                    Registrar
+                </button>
+            </div>
+
+		</form>
+
+    </div>
+	
+    <!-- Mensaje de envío exitoso -->
+    <div class="exito" id="mensajeExito"><i class="fa-solid fa-circle-check"></i>&nbsp;&nbsp;&nbsp;Folio registrado con éxito</div>
+
+
+    <div class="contenedor">
+			
+		<!--Tabla-->
+			<div class="row">
+			    <div class="table-responsive">
+				
+				    <table class="table table-hover table-sm" id="datatable">
+
+                        <thead>
+                            <tr>
+                                <th class="title-tabla" scope="col" >Hora</th>&nbsp;&nbsp;
+                                <th class="title-tabla" scope="col" >Folio</th>&nbsp;&nbsp;
+                                <th class="title-tabla" scope="col">Tipo de Canalización</th>
+                                <th class="title-tabla" scope="col" width="5">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Base&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
+                                <th class="title-tabla" scope="col" width="5">&nbsp;&nbsp;Operador&nbsp;&nbsp;</th>
+                                
+                            </tr>
+                        </thead>
+                        
+                        <tbody></tbody>
+                        
+                    </table>
+
+                    <script>
+                        // URL de la API
+                        const apiURL = 'https://sheetdb.io/api/v1/nblb7xgohztvg';
+
+                        // Función para obtener los datos de la API
+                        async function obtenerDatos() {
+                            try {
+                                const response = await fetch(apiURL);
+                                const data = await response.json();
+                                return data;
+                            } catch (error) {
+                                console.error('Error al obtener los datos:', error);
+                            }
+                        }
+
+                        // Función para crear la tabla en HTML
+                        async function crearTabla() {
+                            const tablaDatos = document.getElementById('datatable');
+                            const tbody = tablaDatos.getElementsByTagName('tbody')[0];
+                            const datos = await obtenerDatos();
+
+                            // Verificar si se obtuvieron datos
+                            if (datos && datos.length > 0) {
+                                // Limpiar el cuerpo de la tabla antes de agregar nuevos elementos
+                                tbody.innerHTML = '';
+
+                                // Iterar sobre los datos y crear filas de tabla
+                                datos.forEach(item => {
+                                    const row = document.createElement('tr');
+                                    row.innerHTML = `
+                                        <td>${item.hora_folio}</td>
+                                        <td><a div class="folio" href="#" onclick="abrirVentana('${item.folio}')">${item.folio}<a></td>
+                                        <td><span>${item.tipo}</span></td>
+                                        <td><div class="status">${item.status}</div></td>
+                                        <td><div class="status">${item.status}</div></td>
+                                        <!-- Agrega más celdas según la estructura de tus datos -->
+                                    `;
+
+                                    // Agregar clase según el valor de item.TIPO al span
+                                    const tipoSpan = row.querySelector('span');
+                                    if (item.tipo === 'Envío de Patrulla') {
+                                        tipoSpan.classList.add('Clave-1');
+                                    } else if (item.tipo === 'Entrevista Ciudadana') {
+                                        tipoSpan.classList.add('Clave-2');
+                                    } else if (item.tipo === 'Vialidad y Tránsito') {
+                                        tipoSpan.classList.add('Clave-3');
+                                    } else {
+                                        // Si el tipo no coincide con ninguno de los casos, se agrega una clase por defecto
+                                        tipoSpan.classList.add('clase-por-defecto');
+                                    }
+
+                                    tbody.appendChild(row);
+                                                    });
+                            } else {
+                                // Mostrar un mensaje si no se obtuvieron datos
+                                tbody.innerHTML = '<tr><td colspan="3">No se encontraron datos.</td></tr>';
+                            }
+                        }
+
+
+
+                        // Llamar a la función para crear la tabla al cargar la página
+                        window.onload = crearTabla;
+                    </script>
+
+                </div>
+            </div>
+
+        <!--Tabla-->
+
+    </div>
+  
+  
+
+<script src="JS/app.js"></script>
+<script src="JS/abrirVentana.js"></script>
+
+
+
+
+
+
+</body>
+</html>
